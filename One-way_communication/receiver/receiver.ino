@@ -10,7 +10,7 @@ typedef struct struct_message {
     bool d;
 } struct_message;
 
-// Create a struct variable that type of struct_message
+// Create a struct variable that type of struct_message 
 struct_message myData;
 
 // Our callback function will be executed when data is received
