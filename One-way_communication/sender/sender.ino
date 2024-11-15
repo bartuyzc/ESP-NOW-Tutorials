@@ -13,7 +13,7 @@ typedef struct struct_message {
   bool d;
 } struct_message;
 
-// Create a struct variable that type of struct_message
+// Create a struct variable that type of struct_message 
 struct_message myData;
 
 esp_now_peer_info_t peerInfo;
