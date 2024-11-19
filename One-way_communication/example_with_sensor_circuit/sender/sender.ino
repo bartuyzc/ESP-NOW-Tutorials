@@ -1,12 +1,27 @@
+// OLED libraries
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SH110X.h>
+
+// ESP-NOW libraries
 #include <esp_now.h>
 #include <WiFi.h>
+
+// OLED defines
+#define i2c_Address 0x3c //initialize with the I2C addr 0x3C Typically eBay OLED's
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define OLED_RESET -1   //   QT-PY / XIAO
+Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // digital pins for distance sensor it can change for your board
 #define ECHO_PIN 26
 #define TRIG_PIN 25  
 
 float distance;
-int count = 0;
+int count = -1;
 
 void distance_calc();
 // Replace with !!RECEIVER!! MAC address
@@ -32,13 +47,17 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 }
 
 void setup() {
-  
   Serial.begin(9600);
+  
+  // initilaze OLED
+  display.begin(i2c_Address, true);
+  display.display();
+  delay(2000);
   
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
-    // Set device as a Wi-Fi Station
+  // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
 
   // Init ESP-NOW
@@ -64,15 +83,16 @@ void setup() {
 }
 
 void loop() {
-  distance_calc();
-  send_espnow();
+  distanceCalc();
+  sendEspnow();
+  updateDisplay();
   
   delay(2000);
 }
 
-void send_espnow(){
+void sendEspnow(){
     // Values that we send
-    strcpy(myData.sensor_name, "Distance Sensor");
+    strcpy(myData.sensor_name, "Distance Sensor (cm)");
     myData.id = count;
     myData.dist = distance;
     
@@ -88,7 +108,7 @@ void send_espnow(){
     }
   }
   
-void distance_calc() {
+void distanceCalc() {
   digitalWrite(TRIG_PIN, LOW);
   delayMicroseconds(2);
 
@@ -101,4 +121,13 @@ void distance_calc() {
   distance = duration * 0.034 / 2;
   count += 1;
   Serial.printf("Distance = %.2f cm \n", distance);
+}
+
+void updateDisplay () {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SH110X_WHITE);
+  display.setCursor(0, 0);
+  display.printf("Distance: %0.2f cm", distance);
+  display.display();
 }
